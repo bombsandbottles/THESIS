@@ -10,54 +10,54 @@ seaborn.set(style='ticks')
 import IPython.display
 
 def import_audio(filepath):
-	"""
-	filepath: string pointing to audio file on disk
+    """
+    filepath: string pointing to audio file on disk
 
-	Simple function to quickly read audio data into numpy array
-	
-	returns: data = audio in samples across time
-			 data_l / _r = left and right channels seperated
-			 fs = sample rate
-	 		 t = time vector corresponding to data
-	"""	
-	# filepath = '/Users/harrison/Desktop/Bass Line.wav'
-	data_s, fs = librosa.load(filepath, sr=44100, mono=False)
+    Simple function to quickly read audio data into numpy array
+    
+    returns: data = audio in samples across time
+             data_l / _r = left and right channels seperated
+             fs = sample rate
+             t = time vector corresponding to data
+    """ 
+    # filepath = '/Users/harrison/Desktop/Bass Line.wav'
+    data_s, fs = librosa.load(filepath, sr=44100, mono=False)
 
-	# Seperate Left and Right Channels
-	data_l = data_s[0,:]   				# Left
-	data_r = data_s[1,:] 				# Right
+    # Seperate Left and Right Channels
+    data_l = data_s[0,:]                # Left
+    data_r = data_s[1,:]                # Right
 
-	# Create a time vector for the audio
-	t = np.linspace(0, (len(data_l)/fs), len(data_l))
+    # Create a time vector for the audio
+    t = np.linspace(0, (len(data_l)/fs), len(data_l))
 
-	# Return all the goods
-	return data_s, data_l, data_r, fs, t
+    # Return all the goods
+    return data_s, data_l, data_r, fs, t
 
 def k_filter(x_t, fs, t):
-	"""
-	x_t: audio data in samples across time
-	fs: sample rate of x_t
+    """
+    x_t: audio data in samples across time
+    fs: sample rate of x_t
 
-	Performs standard 48khz K-Filtering as outlined in the ITU-R BS.1770-3 documentation.
+    Performs standard 48khz K-Filtering as outlined in the ITU-R BS.1770-3 documentation.
 
-	return: k-filtered data AND new 48khz fs
-	"""	
-	# Convert fs to 48khz to do K-Filtering
-	if fs != 48000:
-		x_t = librosa.resample(x_t, fs, 48000)
-		t   = librosa.resample(t, fs, 48000)
-		fs  = 48000
+    return: k-filtered data AND new 48khz fs
+    """ 
+    # Convert fs to 48khz to do K-Filtering
+    if fs != 48000:
+        x_t = librosa.resample(x_t, fs, 48000)
+        t   = librosa.resample(t, fs, 48000)
+        fs  = 48000
 
     # Hi-Shelf Boost of +4dB at 1681hz
-	a1 = [1.0, -1.69065929318241, 0.73248077421585]
-	b1 = [1.53512485958697, -2.69169618940638, 1.19839281085285]
+    a1 = [1.0, -1.69065929318241, 0.73248077421585]
+    b1 = [1.53512485958697, -2.69169618940638, 1.19839281085285]
 
-	# Create High-Pass roll off at 38hz
-	a2 = [1.0, -1.99004745483398, 0.99007225036621]
-	b2 = [1.0, -2.0, 1.0]
+    # Create High-Pass roll off at 38hz
+    a2 = [1.0, -1.99004745483398, 0.99007225036621]
+    b2 = [1.0, -2.0, 1.0]
 
-	# Filter in succession
-	return lfilter(b2, a2, lfilter(b1, a1, x_t)), fs, t
+    # Filter in succession
+    return lfilter(b2, a2, lfilter(b1, a1, x_t)), fs, t
 
 def calc_loudness(filepath, measurement = 'momentary'):
     """

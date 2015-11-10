@@ -22,26 +22,26 @@ def normalize_multitracks(filepath):
 	create_folder(norm_path)
 
 	# Scan tracks, and get the peak amplitudes of each track
-    for track in tracks:
-    	file_name, file_extension = os.path.splitext(track)
-    	if file_extension == '.wav':
-    		data_s, data_l, data_r, fs, t = feature_extraction.import_audio(filepath + "/" + track)
-    		peak_amplitude = calc_peak(data_l, data_r)
-    		peak_amplitudes.append(peak_amplitude)
+	for track in tracks:
+		file_name, file_extension = os.path.splitext(track)
+		if file_extension == '.wav':
+			data_s, data_l, data_r, fs, t = feature_extraction.import_audio(filepath + "/" + track)
+			peak_amplitude = calc_peak(data_l, data_r)
+			peak_amplitudes.append(peak_amplitude)
 
-   	# Find the highest amplitude track by index
-    idxs = np.argwhere(peak_amplitudes == np.amax(peak_amplitudes))
-    idxs = idxs.flatten().tolist()
+	# Find the highest amplitude track by index
+	idxs = np.argwhere(peak_amplitudes == np.amax(peak_amplitudes))
+	idxs = idxs.flatten().tolist()
 
-    # Normalize the highest amplitude tracks
-    track_num = 0
-    for track in tracks:
-    	file_name, file_extension = os.path.splitext(track)
-    	if file_extension == '.wav' and track_num in idxs:
-    		data_s, data_l, data_r, fs, t = feature_extraction.import_audio(filepath + "/" + track)
-    		write_path = (norm_path + "/" + file_name + "_normalized" + file_extension)
-    		librosa.output.write_wav(write_path, data_s, sr=44100, norm=True)
-    	track_num += 1
+	# Normalize the highest amplitude tracks
+	track_num = 0
+	for track in tracks:
+		file_name, file_extension = os.path.splitext(track)
+		if file_extension == '.wav' and track_num in idxs:
+			data_s, data_l, data_r, fs, t = feature_extraction.import_audio(filepath + "/" + track)
+			write_path = (norm_path + "/" + file_name + "_normalized" + file_extension)
+			librosa.output.write_wav(write_path, data_s, sr=44100, norm=True)
+		track_num += 1
 
 
 def calc_peak(data_l, data_r):
@@ -53,12 +53,12 @@ def calc_peak(data_l, data_r):
 	returns: the peak_amplitude 
 	"""
 	peaks = []
-    peaks.append(np.amax(np.absolute(data_l)))
-    peaks.append(np.amax(np.absolute(data_r)))
-    if peaks[0] == peaks[1]:
-        peak_amplitude = peaks[0]
-    else:
-        peak_amplitude = np.amax(peaks)
+	peaks.append(np.amax(np.absolute(data_l)))
+	peaks.append(np.amax(np.absolute(data_r)))
+	if peaks[0] == peaks[1]:
+		peak_amplitude = peaks[0]
+	else:
+		peak_amplitude = np.amax(peaks)
 	return peak_amplitude
 
 def create_folder(filepath):
@@ -66,11 +66,11 @@ def create_folder(filepath):
 	Creates the normalization folder to house all the new
 	normalized data
 	"""
-    if os.path.exists(filepath):
-         shutil.rmtree(filepath)
-    os.makedirs(filepath)
+	if os.path.exists(filepath):
+		 shutil.rmtree(filepath)
+	os.makedirs(filepath)
 
-    # if not os.path.exists(filepath):
-    #     os.makedirs(filepath)
+	# if not os.path.exists(filepath):
+	#     os.makedirs(filepath)
 
-            
+			
