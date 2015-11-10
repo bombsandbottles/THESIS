@@ -1,0 +1,6 @@
+1. Read in all audio files, determine which is the loudest
+	- combine filepath for import audio
+
+2. Normalize the loudest so that its peak audio level is 0dB.
+
+3. 
