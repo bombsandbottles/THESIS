@@ -59,7 +59,7 @@ def normalize_multitracks(filepath):
 			track_num += 1
 			if track_num in idxs_relative:
 				data_s, data_l, data_r, fs, t = feature_extraction.import_audio(filepath + "/" + track)
-				# Relative Normalization
+				# Perform the Relative Normalization
 				data_s = data_s/scalar
 				write_path = (norm_path + "/" + file_name + "_normalized" + file_extension)
 				librosa.output.write_wav(write_path, data_s, sr=44100, norm=False)

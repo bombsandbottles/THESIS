@@ -1,0 +1,420 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"data",
+				"data_s"
+			],
+			[
+				"norm",
+				"normalized"
+			],
+			[
+				"peak",
+				"peak_amplitude"
+			],
+			[
+				"ret",
+				"return	(feature_extraction.py)"
+			],
+			[
+				"vert",
+				"vertical	(materialize.css)"
+			],
+			[
+				"di",
+				"divider	(materialize.css)"
+			],
+			[
+				"scr",
+				"scrollspy"
+			],
+			[
+				"wid",
+				"width"
+			],
+			[
+				"off",
+				"offset	(materialize.css)"
+			],
+			[
+				"acc",
+				"accent-3"
+			],
+			[
+				"h",
+				"h1	Tag"
+			],
+			[
+				"head",
+				"header	Tag"
+			],
+			[
+				"hea",
+				"header	Tag"
+			],
+			[
+				"Jg",
+				"Jg_len"
+			],
+			[
+				"sum_",
+				"sum_r"
+			],
+			[
+				"loud",
+				"loudness_k"
+			],
+			[
+				"mean",
+				"mean_square"
+			],
+			[
+				"z_",
+				"z_l"
+			],
+			[
+				"lou",
+				"loudness_k"
+			],
+			[
+				"over",
+				"overlap"
+			],
+			[
+				"win",
+				"win_size"
+			],
+			[
+				"daa",
+				"data_l"
+			]
+		]
+	},
+	"buffers":
+	[
+	],
+	"build_system": "",
+	"build_system_choices":
+	[
+		[
+			[
+				[
+					"Packages/LaTeXing/LaTeX.sublime-build",
+					""
+				],
+				[
+					"Packages/LaTeXing/LaTeX.sublime-build",
+					"Clean up Files"
+				],
+				[
+					"Packages/LaTeXTools/LaTeX.sublime-build",
+					""
+				]
+			],
+			[
+				"Packages/LaTeXing/LaTeX.sublime-build",
+				""
+			]
+		],
+		[
+			[
+				[
+					"Packages/Python/Python.sublime-build",
+					""
+				],
+				[
+					"Packages/Python/Python.sublime-build",
+					"Syntax Check"
+				]
+			],
+			[
+				"Packages/Python/Python.sublime-build",
+				""
+			]
+		]
+	],
+	"build_varint": "",
+	"command_palette":
+	{
+		"height": 247.0,
+		"last_filter": "pack ins",
+		"selected_items":
+		[
+			[
+				"pack ins",
+				"Package Control: Install Package"
+			],
+			[
+				"pack",
+				"Package Control: Install Package"
+			],
+			[
+				"mark",
+				"Set Syntax: Markdown"
+			],
+			[
+				"css",
+				"Set Syntax: CSS"
+			],
+			[
+				"htm",
+				"Set Syntax: HTML"
+			],
+			[
+				"jav",
+				"Set Syntax: JavaScript"
+			],
+			[
+				"prefer",
+				"Preferences: Key Bindings - User"
+			],
+			[
+				"pref",
+				"Preferences: Browse Packages"
+			],
+			[
+				"pyth",
+				"Set Syntax: Python"
+			],
+			[
+				"la",
+				"Set Syntax: LaTeX"
+			],
+			[
+				"latex",
+				"Set Syntax: LaTeX"
+			],
+			[
+				"mat",
+				"Set Syntax: MATLAB"
+			]
+		],
+		"width": 467.0
+	},
+	"console":
+	{
+		"height": 139.0,
+		"history":
+		[
+			"import urllib.request,os,hashlib; h = '2915d1851351e5ee549c20394736b442' + '8bc59f460fa1548d1514676163dafc88'; pf = 'Package Control.sublime-package'; ipp = sublime.installed_packages_path(); urllib.request.install_opener( urllib.request.build_opener( urllib.request.ProxyHandler()) ); by = urllib.request.urlopen( 'http://packagecontrol.io/' + pf.replace(' ', '%20')).read(); dh = hashlib.sha256(by).hexdigest(); print('Error validating download (got %s instead of %s), please try manual install' % (dh, h)) if dh != h else open(os.path.join( ipp, pf), 'wb' ).write(by)"
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"expanded_folders":
+	[
+		"/Users/harrison/Google Drive/NYU/Masters Music Tech/1 - THESIS/THESIS"
+	],
+	"file_history":
+	[
+		"/Users/harrison/Google Drive/NYU/Masters Music Tech/1 - THESIS/THESIS.sublime-project",
+		"/Users/harrison/Google Drive/NYU/Masters Music Tech/1 - THESIS/THESIS/Code/mir_utils.py",
+		"/Users/harrison/Google Drive/NYU/Masters Music Tech/1 - THESIS/THESIS/Code/feature_extraction.py",
+		"/Users/harrison/Google Drive/NYU/Masters Music Tech/1 - THESIS/THESIS/Code/normalize_data.py",
+		"/Users/harrison/Library/Application Support/Sublime Text 3/Packages/User/Preferences.sublime-settings",
+		"/Users/harrison/Google Drive/NYU/Masters Music Tech/1 - THESIS/clear_icons.mdown",
+		"/Users/harrison/Google Drive/NYU/Masters Music Tech/1 - THESIS/Code/normalize_data.py",
+		"/Users/harrison/Desktop/MyWebsite/Portfolio/css/custom.css",
+		"/Users/harrison/Desktop/MyWebsite/Portfolio/css/materialize.css",
+		"/Users/harrison/Desktop/MyWebsite/Portfolio/index.html",
+		"/Users/harrison/Google Drive/NYU/Masters Music Tech/1 - THESIS/Code/feature_extraction.py",
+		"/Users/harrison/Desktop/MyWebsite/js/init.js",
+		"/Users/harrison/Desktop/MyWebsite/css/custom.css",
+		"/Users/harrison/Desktop/MyWebsite/index.html",
+		"/Users/harrison/Library/Application Support/Sublime Text 3/Packages/User/Default (OSX).sublime-keymap",
+		"/Users/harrison/Google Drive/NYU/Masters Music Tech/Fall 2015/Mastering/Log/LatexLog/Zafrin_Harrison_Log.tex",
+		"/Users/harrison/Desktop/Thanks for the introduction Sam and Rachel.",
+		"/Users/harrison/Desktop/amazon.py",
+		"/Users/harrison/Desktop/downloadcomix",
+		"/Users/harrison/Desktop/test.py",
+		"/Users/harrison/Google Drive/NYU/Masters Music Tech/Fall 2015/Mastering/Midterm/Peng Critique/Zafrin_Harrison_MidtermPengCritique.tex",
+		"/Users/harrison/Google Drive/NYU/Masters Music Tech/Fall 2015/Mastering/Midterm/Peng Critique/Zafrin_Harrison_AS4midtermwriteup.tex",
+		"/Users/harrison/Desktop/mapit.py",
+		"/Users/harrison/Desktop/Helpers/LaTeXPrimer/LaTeXPrimer.tex",
+		"/Users/harrison/Desktop/Android/Mac/shamu-mra58k/flash-all.sh",
+		"/Users/harrison/Google Drive/NYU/Masters Music Tech/Fall 2015/Mastering/BobKatzAS/Latex/Zafrin_Harrison_AS3_CH6-7.tex",
+		"/Users/harrison/Google Drive/NYU/Masters Music Tech/Fall 2015/FundAlgorithms/ps1.tex",
+		"/Users/harrison/Google Drive/NYU/Masters Music Tech/Summer 2015/Colloquy/These Proposal/ThesisProposal/Zafrin_Harrison_ThesisProposal.tex",
+		"/Users/harrison/Google Drive/NYU/Masters Music Tech/Spring 2015/DSTII/Final Project/Intelligent-Equalization/Code/calc_loudness_EBU.m",
+		"/Users/harrison/Google Drive/NYU/Masters Music Tech/Fall 2015/AAP/Notes",
+		"/Users/harrison/Desktop/mergesort.c",
+		"/Users/harrison/Desktop/mergesort-solution.c",
+		"/Users/harrison/Desktop/Zafrin_Harrison_FTPTest",
+		"/Users/harrison/Google Drive/NYU/Masters Music Tech/Resume/resume_V2/Zafrin_Harrison_Resume.tex",
+		"/Users/harrison/Desktop/Dave",
+		"/Users/harrison/Google Drive/NYU/Masters Music Tech/Summer 2015/AdvMusAcou/Final Project/LATEX/Zafrin_AcousticsFP.tex",
+		"/Users/harrison/Desktop/IR_utils.py",
+		"/Users/harrison/Desktop/IR_Analyze.py"
+	],
+	"find":
+	{
+		"height": 25.0
+	},
+	"find_in_files":
+	{
+		"height": 0.0,
+		"where_history":
+		[
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+			"idxs_norm",
+			"idxs",
+			"d",
+			"scip",
+			"lfi",
+			"np",
+			"card-action",
+			"300",
+			"card-action",
+			"h4",
+			"waves-effect waves-light",
+			"light",
+			"grey-text text-lighten-5",
+			"light",
+			"divider",
+			"00E5FF",
+			"255",
+			"html",
+			"font",
+			"h1",
+			"mobile",
+			"nav-mobile",
+			"right hid",
+			"background-color",
+			"hover",
+			"56096571e4b0758498de381c",
+			"driver",
+			"relative_measure",
+			"=/",
+			"loudness_k",
+			"abs_thresh",
+			"zeros",
+			"data_l",
+			"l"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+			"light",
+			"BOTTLES",
+			"blue"
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"sheets":
+			[
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 25.0
+	},
+	"input":
+	{
+		"height": 0.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.exec":
+	{
+		"height": 27.0
+	},
+	"output.find_results":
+	{
+		"height": 0.0
+	},
+	"pinned_build_system": "",
+	"project": "Thesis.sublime-project",
+	"replace":
+	{
+		"height": 46.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_symbol":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"selected_group": 0,
+	"settings":
+	{
+	},
+	"show_minimap": true,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 150.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}
