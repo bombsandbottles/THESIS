@@ -3,11 +3,11 @@ import numpy as np
 import scipy
 from scipy.signal import lfilter
 import librosa
-import matplotlib.pyplot as plt
-%matplotlib inline
-import seaborn
-seaborn.set(style='ticks')
-import IPython.display
+# import matplotlib.pyplot as plt
+# %matplotlib inline
+# import seaborn
+# seaborn.set(style='ticks')
+# import IPython.display
 
 def import_audio(filepath):
     """
