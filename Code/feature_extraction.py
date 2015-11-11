@@ -160,8 +160,6 @@ def calc_loudness(filepath, measurement = 'momentary'):
             # Return Integrated Loudness Value
             return -0.691 + (10 * np.log10(sum_Jg))
 
-"TODO : Write Normalize -1 to 1 function"
-
 
 
 

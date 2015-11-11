@@ -30,19 +30,39 @@ def normalize_multitracks(filepath):
 			peak_amplitudes.append(peak_amplitude)
 
 	# Find the highest amplitude track by index
-	idxs = np.argwhere(peak_amplitudes == np.amax(peak_amplitudes))
-	idxs = idxs.flatten().tolist()
+	idxs_norm = np.argwhere(peak_amplitudes == np.amax(peak_amplitudes))
+	idxs_norm = idxs_norm.flatten().tolist()
 
-	# Normalize the highest amplitude tracks
-	track_num = 0
+	# Normalize the highest amplitude tracks and write them out
+	track_num = -1
 	for track in tracks:
 		file_name, file_extension = os.path.splitext(track)
-		if file_extension == '.wav' and track_num in idxs:
-			data_s, data_l, data_r, fs, t = feature_extraction.import_audio(filepath + "/" + track)
-			write_path = (norm_path + "/" + file_name + "_normalized" + file_extension)
-			librosa.output.write_wav(write_path, data_s, sr=44100, norm=True)
-		track_num += 1
+		if file_extension == '.wav': 
+			track_num += 1
+			if track_num in idxs:
+				data_s, data_l, data_r, fs, t = feature_extraction.import_audio(filepath + "/" + track)
+				write_path = (norm_path + "/" + file_name + "_normalized" + file_extension)
+				librosa.output.write_wav(write_path, data_s, sr=44100, norm=True)
 
+	# Find the indexes of all the other tracks that need to be raised relative to those normalized to 0
+	idxs_relative = np.argwhere(peak_amplitudes != np.amax(peak_amplitudes))
+	idxs_relative = idxs_relative.flatten().tolist()
+
+	# This value will be used to scale all other tracks to those normalized
+	scalar = np.amax(peak_amplitudes)
+
+	# Raise the amplitude of all tracks the same amount that those normalized to 0 were raised
+	track_num = -1
+	for track in tracks:
+		file_name, file_extension = os.path.splitext(track)
+		if file_extension == '.wav':
+			track_num += 1
+			if track_num in idxs_relative:
+				data_s, data_l, data_r, fs, t = feature_extraction.import_audio(filepath + "/" + track)
+				# Relative Normalization
+				data_s = data_s/scalar
+				write_path = (norm_path + "/" + file_name + "_normalized" + file_extension)
+				librosa.output.write_wav(write_path, data_s, sr=44100, norm=False)
 
 def calc_peak(data_l, data_r):
 	"""
@@ -69,8 +89,5 @@ def create_folder(filepath):
 	if os.path.exists(filepath):
 		 shutil.rmtree(filepath)
 	os.makedirs(filepath)
-
-	# if not os.path.exists(filepath):
-	#     os.makedirs(filepath)
 
 			
