@@ -160,11 +160,40 @@ def calc_loudness(filepath, measurement = 'momentary'):
             # Return Integrated Loudness Value
             return -0.691 + (10 * np.log10(sum_Jg))
 
+def crest_factor(data, win_size, fs=44100):
+    """
+    data: audio as numpy array to be analyzed
+    fs: sample rate of the data
+    win_size: value in ms to create the blocks for analysis
+    
+    Given a window size for analysis (1ms and 100ms typically for this research), 
+    find the crest factor value of that windows as an indicator for dynamic range
 
+    return: crest factor
+    """
+    # Buffer the signal matrix-style (input, block-size, hop-size)
+    win_size = np.floor(win_size*(fs/1000))
 
+    # Check if data is stereo or mono, perform processing accordingly
+    if len(data) == 2:
+        crest_factor_l = calc_crest_factor(data[0,:], win_size)
+        crest_factor_r = calc_crest_factor(data[1,:], win_size)
 
+    elif len(data) == 1:
+        crest_factor_m = calc_crest_factor(data, win_size)
 
+def calc_crest_factor(data, win_size):
+    """NEED TO ACCOUNT FOR ACTIVE OR INACTIVE FRAMES!!!!"""
+    # Buffer the signal matrix-style (input, block-size, hop-size)
+    data_matrix = librosa.util.frame(data, win_size, win_size)
 
+    peaks = np.amax(np.absolute(data_matrix), axis=0)
+
+    # Get the mean-square over each window
+    RMS = np.sqrt(np.mean(np.square(data_matrix), axis=0))
+
+    # Get crest factor for each window
+    return np.divide(peaks, RMS)
 
 
 
