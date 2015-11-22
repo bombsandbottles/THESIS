@@ -160,42 +160,197 @@ def calc_loudness(filepath, measurement = 'momentary'):
             # Return Integrated Loudness Value
             return -0.691 + (10 * np.log10(sum_Jg))
 
-def crest_factor(data, win_size, fs=44100):
+def calc_rms(data, win_size):
+    """
+    data: audio as numpy array to be analyzed
+    win_size: value in samples to create the blocks for analysis
+    
+    Simple RMS function that can accomodate stereo data.
+    Used in calc_crest_factor
+
+    return: RMS of signal
+    """
+    if len(data) == 2:
+        # Seperate left and right channels
+        data_l = data[0,:]               
+        data_r = data[1,:]
+
+        # Buffer up the data
+        data_matrix_l = librosa.util.frame(data_l, win_size, win_size)
+        data_matrix_r = librosa.util.frame(data_r, win_size, win_size)
+
+        # Square and sum the left and right seperatley
+        sum_l = np.sum(np.square(data_matrix_l), axis=0)
+        sum_r = np.sum(np.square(data_matrix_r), axis=0)
+
+        # Sum the left and right channels, take the mean, and sqrt
+        return np.sqrt(np.divide(np.add(sum_l, sum_r), win_size*2))
+
+    elif len(data) == 1:
+        # Buffer up the data and perform root mean square
+        data_matrix = librosa.util.frame(data, win_size, win_size)
+        return np.sqrt(np.mean(np.square(data_matrix), axis=0))
+
+def get_peaks_cf(data, win_size):
+    """
+    data: audio as numpy array to be analyzed
+    win_size: value in samples to create the blocks for analysis
+    
+    Used in calc_crest_factor, this function returns an array of peak levels
+    for each window.
+
+    return: array of peak audio levels
+    """
+    if len(data) == 2:
+        # Seperate left and right channels
+        data_l = data[0,:]               
+        data_r = data[1,:]
+
+        # Buffer up the data
+        data_matrix_l = librosa.util.frame(data_l, win_size, win_size)
+        data_matrix_r = librosa.util.frame(data_r, win_size, win_size)
+
+        # Get peaks for left and right channels
+        peaks_l = np.amax(np.absolute(data_matrix_l), axis=0)
+        peaks_r = np.amax(np.absolute(data_matrix_r), axis=0)
+        return np.maximum(peaks_l, peaks_r)
+
+    elif len(data) == 1:
+        return np.amax(np.absolute(data_matrix), axis=0)
+
+def calc_crest_factor(data, win_size, fs=44100):
     """
     data: audio as numpy array to be analyzed
     fs: sample rate of the data
     win_size: value in ms to create the blocks for analysis
     
-    Given a window size for analysis (1ms and 100ms typically for this research), 
+    Given a window size for analysis (1s and 100ms typically for this research), 
     find the crest factor value of that windows as an indicator for dynamic range
+
+    !!! calc_activity gets passed win_size in time still and not samples, this can 
+    be done more elegantly !!!
 
     return: crest factor
     """
     # Buffer the signal matrix-style (input, block-size, hop-size)
-    win_size = np.floor(win_size*(fs/1000))
+    win_size_s = np.floor(win_size*(fs/1000))
 
-    # Check if data is stereo or mono, perform processing accordingly
+    # Get the RMS level per window
+    rms = calc_rms(data, win_size_s)
+
+    # Get the peak audio level per window
+    peaks = get_peaks_cf(data, win_size_s)
+
+    # Figure out the active frames
+    activity = calc_activity(data, win_size)
+
+    # Calculate the Crest Factor per window
+    return np.multiply(np.divide(peaks, rms), activity)
+
+def calc_activity(data, win_size):
+    """
+    data: audio array in mono or stereo
+    win_size: size in samples for the block analysis
+
+    Utilyzing a Hysteresis Noise Gate, a time block is considered to be
+    either active or inactive.  Hysteresis thresholds at -25 and -30 LUFS 
+    are used to help prevent excessive switching of states.
+
+    Concept pulled from  Mansbridge, Finn, and Reiss (2012)
+        Implementation and Evaluation of Autonomous Multi-track Fader Control
+
+    returns: an array of containings zeros and ones 
+                                            zero = inactive
+                                            one = active
+    """
+    # Define constants
+    upper_thresh = -25
+    lower_thresh = -30
+    past_frame   = 0
+
+    # Get our LUFS values
+    LUFS = custom_LUFS(data, win_size)
+
+    # Pre-Allocate Active Frames
+    active_frames = np.zeros(len(LUFS))
+
+    for i in xrange(len(LUFS)):
+        # If above -25LUFS, 1 equal active frame
+        if LUFS[i] > upper_thresh:
+            active_frames[i] = 1
+
+        # If the past frame was above -25LUFS and this ones above -30
+        elif past_frame > upper_thresh and LUFS[i] > lower_thresh:
+            active_frames[i] = 1
+            
+        # If the current frame is below the threshold, non-active
+        elif LUFS[i] < upper_thresh:
+            active_frames[i] = 0
+        
+        # The analyzed frame becomes the past frame
+        past_frame = LUFS[i]
+
+    return active_frames
+
+def custom_LUFS(data, win_size, overlap=0):
     if len(data) == 2:
-        crest_factor_l = calc_crest_factor(data[0,:], win_size)
-        crest_factor_r = calc_crest_factor(data[1,:], win_size)
+        # Seperate Left and Right Channels
+        data_l = data[0,:]
+        data_r = data[1,:]
+
+        # K-filter
+        data_l, fs_filt = temp_kfilter(data_l, fs=44100)
+        data_r, fs_filt = temp_kfilter(data_r, fs=44100)
+
+        # Buffer the signal matrix-style (input, block-size, hop-size)
+        win_size = win_size*(fs_filt/1000)
+        data_l = librosa.util.frame( data_l, win_size, win_size - (win_size*(overlap/100)) )
+        data_r = librosa.util.frame( data_r, win_size, win_size - (win_size*(overlap/100)) )
+
+        # Get the mean-square over each window
+        z_l = np.mean(np.square(data_l), axis=0)
+        z_r = np.mean(np.square(data_r), axis=0)
+
+        # Sum the left and right channel, Convert to Loudness
+        return -0.691 + (10 * np.log10(np.add(z_l, z_r)))
 
     elif len(data) == 1:
-        crest_factor_m = calc_crest_factor(data, win_size)
+        # K-filter
+        data, fs_filt = temp_kfilter(data, fs=44100)
 
-def calc_crest_factor(data, win_size):
-    """NEED TO ACCOUNT FOR ACTIVE OR INACTIVE FRAMES!!!!"""
-    # Buffer the signal matrix-style (input, block-size, hop-size)
-    data_matrix = librosa.util.frame(data, win_size, win_size)
+        # Buffer the signal matrix-style (input, block-size, hop-size)
+        win_size = win_size*(fs_filt/1000)
+        data = librosa.util.frame( data, win_size, win_size - (win_size*(overlap/100)) )
 
-    peaks = np.amax(np.absolute(data_matrix), axis=0)
+        # Get the mean-square over each window
+        z = np.mean(np.square(data), axis=0)
 
-    # Get the mean-square over each window
-    RMS = np.sqrt(np.mean(np.square(data_matrix), axis=0))
+        # Sum the left and right channel, Convert to Loudness
+        return -0.691 + (10 * np.log10(z))
+    
+def temp_kfilter(data, fs):
+    """
+    x_t: audio data in samples across time
+    fs: sample rate of x_t
 
-    # Get crest factor for each window
-    return np.divide(peaks, RMS)
+    TEMPORARY FUNCTION UNTIL THE LOUDNESS FUNCTION IS FIXED FOR ACTIVITY
 
+    return: k-filtered data AND new 48khz fs
+    """ 
+    # Convert fs to 48khz to do K-Filtering
+    if fs != 48000:
+        data = librosa.resample(data, fs, 48000)
+        fs  = 48000
 
+    # Hi-Shelf Boost of +4dB at 1681hz
+    a1 = [1.0, -1.69065929318241, 0.73248077421585]
+    b1 = [1.53512485958697, -2.69169618940638, 1.19839281085285]
 
+    # Create High-Pass roll off at 38hz
+    a2 = [1.0, -1.99004745483398, 0.99007225036621]
+    b2 = [1.0, -2.0, 1.0]
+
+    # Filter in succession
+    return lfilter(b2, a2, lfilter(b1, a1, data)), fs
 
 
