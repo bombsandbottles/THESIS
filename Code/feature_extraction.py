@@ -21,31 +21,26 @@ def import_audio(filepath):
              t = time vector corresponding to data
     """ 
     # filepath = '/Users/harrison/Desktop/Bass Line.wav'
-    data_s, fs = librosa.load(filepath, sr=44100, mono=False)
-
-    # Seperate Left and Right Channels
-    data_l = data_s[0,:]                # Left
-    data_r = data_s[1,:]                # Right
+    data, fs = librosa.load(filepath, sr=44100, mono=False)
 
     # Create a time vector for the audio
-    t = np.linspace(0, (len(data_l)/fs), len(data_l))
+    t = np.linspace(0, (len(data)/fs), len(data))
 
     # Return all the goods
-    return data_s, data_l, data_r, fs, t
+    return data, fs, t
 
-def k_filter(x_t, fs, t):
+def k_filter(data, fs):
     """
     x_t: audio data in samples across time
     fs: sample rate of x_t
 
-    Performs standard 48khz K-Filtering as outlined in the ITU-R BS.1770-3 documentation.
+    TEMPORARY FUNCTION UNTIL THE LOUDNESS FUNCTION IS FIXED FOR ACTIVITY
 
     return: k-filtered data AND new 48khz fs
     """ 
     # Convert fs to 48khz to do K-Filtering
     if fs != 48000:
-        x_t = librosa.resample(x_t, fs, 48000)
-        t   = librosa.resample(t, fs, 48000)
+        data = librosa.resample(data, fs, 48000)
         fs  = 48000
 
     # Hi-Shelf Boost of +4dB at 1681hz
@@ -57,13 +52,15 @@ def k_filter(x_t, fs, t):
     b2 = [1.0, -2.0, 1.0]
 
     # Filter in succession
-    return lfilter(b2, a2, lfilter(b1, a1, x_t)), fs, t
+    return lfilter(b2, a2, lfilter(b1, a1, data)), fs
 
-def calc_loudness(filepath, measurement = 'momentary'):
+def calc_loudness(data, measurement = 'momentary', params = []):
     """
-    filepath: audio to be analyzed
+    data: audio in array form via librosa
     measurement = Momentary, Short-Term, Integrated or Loudness-Range (LRA).  
                     These change the window size and overlap amount
+    param = a list of win_size and overlap for a custom loudness measurement
+
     !!
     In the future this will be updated to reflect the findings in
     Pestana, Reiss, Barbosa (2013) where the time block is 280ms
@@ -86,6 +83,9 @@ def calc_loudness(filepath, measurement = 'momentary'):
     elif measurement == 'short':
         win_size = 3000
         overlap = 0
+    elif measurement == 'custom':
+        win_size = params[0]
+        overlap = params[1]
     elif measurement == 'integrated':
         win_size = 400
         overlap = 75
@@ -96,69 +96,127 @@ def calc_loudness(filepath, measurement = 'momentary'):
         prc_low = 10
         prc_high = 95
 
-    # Import Audio
-    data_s, data_l, data_r, fs, t = import_audio(filepath)
+    if len(data) == 2:
+        # Seperate left and right channels
+        data_l = data[0,:]               
+        data_r = data[1,:]
 
-    # K-filter
-    data_l, fs_filt, t_filt = k_filter(data_l, fs, t)
-    data_r, fs_filt, t_filt = k_filter(data_r, fs, t)
+        # K-filter
+        data_l, fs_filt = k_filter(data_l, fs)
+        data_r, fs_filt = k_filter(data_r, fs)
 
-    # Buffer the signal matrix-style (input, block-size, hop-size)
-    win_size = win_size*(fs_filt/1000)
-    data_l = librosa.util.frame( data_l, win_size, win_size - (win_size*(overlap/100)) )
-    data_r = librosa.util.frame( data_r, win_size, win_size - (win_size*(overlap/100)) )
+        # Buffer the signal matrix-style (input, block-size, hop-size)
+        win_size = win_size*(fs_filt/1000)
+        data_l = librosa.util.frame( data_l, win_size, win_size - (win_size*(overlap/100)) )
+        data_r = librosa.util.frame( data_r, win_size, win_size - (win_size*(overlap/100)) )
 
-    # Get the mean-square over each window
-    z_l = np.mean(np.square(data_l), axis=0)
-    z_r = np.mean(np.square(data_r), axis=0)
+        # Get the mean-square over each window
+        z_l = np.mean(np.square(data_l), axis=0)
+        z_r = np.mean(np.square(data_r), axis=0)
 
-    # Sum the left and right channel, Convert to Loudness
-    loudness_k = -0.691 + (10 * np.log10(np.add(z_l, z_r)))
-    
-    if measurement == 'momentary' or measurement == 'short':
-        return loudness_k
+        # Sum the left and right channel, Convert to Loudness
+        loudness_k = -0.691 + (10 * np.log10(np.add(z_l, z_r)))
+        
+        if measurement == 'momentary' or measurement == 'short' or measurement == 'custom':
+            return loudness_k
 
-    elif measurement == 'integrated' or measurement == 'lra':
-        # Calculate the relative threshold
-        sum_l  = 0
-        sum_r  = 0
-        Jg_len = len(loudness_k[loudness_k >= abs_thresh])
-        Jg_idx = np.greater(loudness_k, abs_thresh)
-        for i in xrange(len(Jg_idx)):
-            if Jg_idx[i] == True:
-                sum_l += z_l[i]
-                sum_r += z_r[i]
-        sum_Jg = (sum_l+sum_r)/Jg_len
-        rel_thresh = (-0.691 + (10 * np.log10(sum_Jg))) + relative_adjustment
-
-        # Break off and compute LRA
-        if measurement == 'lra':
-            # Include values greater than relative threshold.
-            gated_loudness = loudness_k[loudness_k >= rel_thresh]
-            n = len(gated_loudness)
-            gated_loudness = np.sort(gated_loudness)
-
-            # Get values at 10 and 95 percent
-            perc_low = gated_loudness[round((n-1)*(prc_low/100))]
-            perc_high = gated_loudness[round((n-1)*(prc_high/100))]
-
-            # Computer LRA
-            return (perc_high - perc_low)
-
-        elif measurement == 'integrated':
-            # Calculate the integrated loudness using relative threshold
+        elif measurement == 'integrated' or measurement == 'lra':
+            # Calculate the relative threshold
             sum_l  = 0
             sum_r  = 0
-            Jg_len = len(loudness_k[loudness_k >= rel_thresh])
-            Jg_idx = np.greater(loudness_k, rel_thresh)
+            Jg_len = len(loudness_k[loudness_k >= abs_thresh])
+            Jg_idx = np.greater(loudness_k, abs_thresh)
             for i in xrange(len(Jg_idx)):
                 if Jg_idx[i] == True:
                     sum_l += z_l[i]
                     sum_r += z_r[i]
             sum_Jg = (sum_l+sum_r)/Jg_len
-            
-            # Return Integrated Loudness Value
-            return -0.691 + (10 * np.log10(sum_Jg))
+            rel_thresh = (-0.691 + (10 * np.log10(sum_Jg))) + relative_adjustment
+
+            # Break off and compute LRA
+            if measurement == 'lra':
+                # Include values greater than relative threshold.
+                gated_loudness = loudness_k[loudness_k >= rel_thresh]
+                n = len(gated_loudness)
+                gated_loudness = np.sort(gated_loudness)
+
+                # Get values at 10 and 95 percent
+                perc_low = gated_loudness[round((n-1)*(prc_low/100))]
+                perc_high = gated_loudness[round((n-1)*(prc_high/100))]
+
+                # Computer LRA
+                return (perc_high - perc_low)
+
+            elif measurement == 'integrated':
+                # Calculate the integrated loudness using relative threshold
+                sum_l  = 0
+                sum_r  = 0
+                Jg_len = len(loudness_k[loudness_k >= rel_thresh])
+                Jg_idx = np.greater(loudness_k, rel_thresh)
+                for i in xrange(len(Jg_idx)):
+                    if Jg_idx[i] == True:
+                        sum_l += z_l[i]
+                        sum_r += z_r[i]
+                sum_Jg = (sum_l+sum_r)/Jg_len
+                
+                # Return Integrated Loudness Value
+                return -0.691 + (10 * np.log10(sum_Jg))
+
+    # For Mono Data Now
+    else:
+        # K-filter
+        data, fs_filt = k_filter(data, fs)
+
+        # Buffer the signal matrix-style (input, block-size, hop-size)
+        win_size = win_size*(fs_filt/1000)
+        data = librosa.util.frame( data, win_size, win_size - (win_size*(overlap/100)) )
+
+        # Get the mean-square over each window
+        z = np.mean(np.square(data), axis=0)
+
+        # Convert to Loudness
+        loudness_k = -0.691 + (10 * np.log10(z))
+        
+        if measurement == 'momentary' or measurement == 'short' or measurement == 'custom':
+            return loudness_k
+
+        elif measurement == 'integrated' or measurement == 'lra':
+            # Calculate the relative threshold
+            sum_m  = 0
+            Jg_len = len(loudness_k[loudness_k >= abs_thresh])
+            Jg_idx = np.greater(loudness_k, abs_thresh)
+            for i in xrange(len(Jg_idx)):
+                if Jg_idx[i] == True:
+                    sum_m += z[i]
+            sum_Jg = (sum_m)/Jg_len
+            rel_thresh = (-0.691 + (10 * np.log10(sum_Jg))) + relative_adjustment
+
+            # Break off and compute LRA
+            if measurement == 'lra':
+                # Include values greater than relative threshold.
+                gated_loudness = loudness_k[loudness_k >= rel_thresh]
+                n = len(gated_loudness)
+                gated_loudness = np.sort(gated_loudness)
+
+                # Get values at 10 and 95 percent
+                perc_low = gated_loudness[round((n-1)*(prc_low/100))]
+                perc_high = gated_loudness[round((n-1)*(prc_high/100))]
+
+                # Computer LRA
+                return (perc_high - perc_low)
+
+            elif measurement == 'integrated':
+                # Calculate the integrated loudness using relative threshold
+                sum_m  = 0
+                Jg_len = len(loudness_k[loudness_k >= rel_thresh])
+                Jg_idx = np.greater(loudness_k, rel_thresh)
+                for i in xrange(len(Jg_idx)):
+                    if Jg_idx[i] == True:
+                        sum_m += z[i]
+                sum_Jg = (sum_m)/Jg_len
+                
+                # Return Integrated Loudness Value
+                return -0.691 + (10 * np.log10(sum_Jg))
 
 def calc_rms(data, win_size):
     """
@@ -186,7 +244,7 @@ def calc_rms(data, win_size):
         # Sum the left and right channels, take the mean, and sqrt
         return np.sqrt(np.divide(np.add(sum_l, sum_r), win_size*2))
 
-    elif len(data) == 1:
+    else:
         # Buffer up the data and perform root mean square
         data_matrix = librosa.util.frame(data, win_size, win_size)
         return np.sqrt(np.mean(np.square(data_matrix), axis=0))
@@ -215,7 +273,8 @@ def get_peaks_cf(data, win_size):
         peaks_r = np.amax(np.absolute(data_matrix_r), axis=0)
         return np.maximum(peaks_l, peaks_r)
 
-    elif len(data) == 1:
+    else:
+        data_matrix = librosa.util.frame(data, win_size, win_size)
         return np.amax(np.absolute(data_matrix), axis=0)
 
 def calc_crest_factor(data, win_size, fs=44100):
@@ -269,7 +328,8 @@ def calc_activity(data, win_size):
     past_frame   = 0
 
     # Get our LUFS values
-    LUFS = custom_LUFS(data, win_size)
+    params = [win_size, 0]
+    LUFS = calc_loudness(data, 'custom', params)
 
     # Pre-Allocate Active Frames
     active_frames = np.zeros(len(LUFS))
@@ -291,66 +351,3 @@ def calc_activity(data, win_size):
         past_frame = LUFS[i]
 
     return active_frames
-
-def custom_LUFS(data, win_size, overlap=0):
-    if len(data) == 2:
-        # Seperate Left and Right Channels
-        data_l = data[0,:]
-        data_r = data[1,:]
-
-        # K-filter
-        data_l, fs_filt = temp_kfilter(data_l, fs=44100)
-        data_r, fs_filt = temp_kfilter(data_r, fs=44100)
-
-        # Buffer the signal matrix-style (input, block-size, hop-size)
-        win_size = win_size*(fs_filt/1000)
-        data_l = librosa.util.frame( data_l, win_size, win_size - (win_size*(overlap/100)) )
-        data_r = librosa.util.frame( data_r, win_size, win_size - (win_size*(overlap/100)) )
-
-        # Get the mean-square over each window
-        z_l = np.mean(np.square(data_l), axis=0)
-        z_r = np.mean(np.square(data_r), axis=0)
-
-        # Sum the left and right channel, Convert to Loudness
-        return -0.691 + (10 * np.log10(np.add(z_l, z_r)))
-
-    elif len(data) == 1:
-        # K-filter
-        data, fs_filt = temp_kfilter(data, fs=44100)
-
-        # Buffer the signal matrix-style (input, block-size, hop-size)
-        win_size = win_size*(fs_filt/1000)
-        data = librosa.util.frame( data, win_size, win_size - (win_size*(overlap/100)) )
-
-        # Get the mean-square over each window
-        z = np.mean(np.square(data), axis=0)
-
-        # Sum the left and right channel, Convert to Loudness
-        return -0.691 + (10 * np.log10(z))
-    
-def temp_kfilter(data, fs):
-    """
-    x_t: audio data in samples across time
-    fs: sample rate of x_t
-
-    TEMPORARY FUNCTION UNTIL THE LOUDNESS FUNCTION IS FIXED FOR ACTIVITY
-
-    return: k-filtered data AND new 48khz fs
-    """ 
-    # Convert fs to 48khz to do K-Filtering
-    if fs != 48000:
-        data = librosa.resample(data, fs, 48000)
-        fs  = 48000
-
-    # Hi-Shelf Boost of +4dB at 1681hz
-    a1 = [1.0, -1.69065929318241, 0.73248077421585]
-    b1 = [1.53512485958697, -2.69169618940638, 1.19839281085285]
-
-    # Create High-Pass roll off at 38hz
-    a2 = [1.0, -1.99004745483398, 0.99007225036621]
-    b2 = [1.0, -2.0, 1.0]
-
-    # Filter in succession
-    return lfilter(b2, a2, lfilter(b1, a1, data)), fs
-
-
