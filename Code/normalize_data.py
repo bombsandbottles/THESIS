@@ -5,22 +5,35 @@ import shutil
 import mir_utils
 import os, sys
 
-def calc_peak(data_l, data_r):
+def calc_peak(data):
 	"""
-	data_l, data_r: discrete audio arrays, left and right channels
+	data: discrete audio arrays
 
 	Quick function to find peak audio level of a stereo multi-track
 	
 	returns: the peak_amplitude 
 	"""
+	# Store our peak values here
 	peaks = []
-	peaks.append(np.amax(np.absolute(data_l)))
-	peaks.append(np.amax(np.absolute(data_r)))
-	if peaks[0] == peaks[1]:
-		peak_amplitude = peaks[0]
+
+	if len(data) == 2:
+		# Seperate left and right channels
+		data_l = data[0,:]               
+		data_r = data[1,:]
+
+		# Find the peak in the left and right channels respectivley
+		peaks.append(np.amax(np.absolute(data_l)))
+		peaks.append(np.amax(np.absolute(data_r)))
+
+		# Get the peak amplitude of the entire stereo audio
+		if peaks[0] == peaks[1]:
+			peak_amplitude = peaks[0]
+		else:
+			peak_amplitude = np.amax(peaks)
+		return peak_amplitude
 	else:
-		peak_amplitude = np.amax(peaks)
-	return peak_amplitude
+		# Only gotta check one array quick and easy
+		return np.amax(np.absolute(data))
 
 def create_folder(filepath):
 	"""
@@ -54,8 +67,8 @@ def normalize_multitracks(filepath):
 	for track in tracks:
 		file_name, file_extension = os.path.splitext(track)
 		if file_extension == '.wav':
-			data_s, data_l, data_r, fs, t = feature_extraction.import_audio(filepath + "/" + track)
-			peak_amplitude = calc_peak(data_l, data_r)
+			data, fs, t = feature_extraction.import_audio(filepath + "/" + track)
+			peak_amplitude = calc_peak(data)
 			peak_amplitudes.append(peak_amplitude)
 
 	# Find the highest amplitude track by index
@@ -69,10 +82,10 @@ def normalize_multitracks(filepath):
 		if file_extension == '.wav': 
 			track_num += 1
 			if track_num in idxs_norm:
-				data_s, data_l, data_r, fs, t = feature_extraction.import_audio(filepath + "/" + track)
+				data, fs, t = feature_extraction.import_audio(filepath + "/" + track)
 				write_path = (norm_path + "/" + file_name + "_normalized" + file_extension)
 				print("Normalizing %s") % track
-				librosa.output.write_wav(write_path, data_s, sr=44100, norm=True)
+				librosa.output.write_wav(write_path, data, sr=44100, norm=True)
 
 	# Find the indexes of all the other tracks that need to be raised relative to those normalized to 0
 	idxs_relative = np.argwhere(peak_amplitudes != np.amax(peak_amplitudes))
@@ -88,10 +101,10 @@ def normalize_multitracks(filepath):
 		if file_extension == '.wav':
 			track_num += 1
 			if track_num in idxs_relative:
-				data_s, data_l, data_r, fs, t = feature_extraction.import_audio(filepath + "/" + track)
+				data, fs, t = feature_extraction.import_audio(filepath + "/" + track)
 				# Perform the Relative Normalization
-				data_s = data_s/scalar
+				data = data/scalar
 				write_path = (norm_path + "/" + file_name + "_normalized" + file_extension)
 				print("Normalizing %s") % track
-				librosa.output.write_wav(write_path, data_s, sr=44100, norm=False)
+				librosa.output.write_wav(write_path, data, sr=44100, norm=False)
 			
