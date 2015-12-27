@@ -24,8 +24,11 @@ def import_audio(filepath):
     data, fs = librosa.load(filepath, sr=44100, mono=False)
 
     # Create a time vector for the audio
-    t = np.linspace(0, (len(data)/fs), len(data))
-
+    if len(data) == 2:
+        t = np.linspace(0, (len(data[0,:])/fs), len(data[0,:]))
+    else:
+        t = np.linspace(0, (len(data)/fs), len(data))
+    
     # Return all the goods
     return data, fs, t
 
@@ -351,3 +354,17 @@ def calc_activity(data, win_size):
         past_frame = LUFS[i]
 
     return active_frames
+
+def create_time_vector(data, fs_old, hop_size):
+    """
+    data: audio array in mono or stereo
+    hop_size: size in samples of the hop
+
+
+    returns: a time vector corresponding to data
+    """
+    # Convert Sampling Rate based on Hop Size
+    fs_new = fs_old/hop_size
+
+    # Create Time Vector
+    return np.linspace(0, (len(data)/fs_new), len(data))
