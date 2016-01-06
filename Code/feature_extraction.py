@@ -69,8 +69,6 @@ def calc_loudness(data, measurement = 'momentary', params = []):
     Pestana, Reiss, Barbosa (2013) where the time block is 280ms
     and the first stage of the K-Filtering reflects a 10dB boost
     instead of 4dB
-
-    Only works for stereo audio.
     !!
 
     return: LUKS/LUFS
@@ -119,9 +117,12 @@ def calc_loudness(data, measurement = 'momentary', params = []):
 
         # Sum the left and right channel, Convert to Loudness
         loudness_k = -0.691 + (10 * np.log10(np.add(z_l, z_r)))
+
+        # Create Corresponding Time Vector
+        loudness_t = create_time_vector(loudness_k, fs_filt, win_size - (win_size*(overlap/100)))
         
         if measurement == 'momentary' or measurement == 'short' or measurement == 'custom':
-            return loudness_k
+            return loudness_k, loudness_t
 
         elif measurement == 'integrated' or measurement == 'lra':
             # Calculate the relative threshold
@@ -179,9 +180,12 @@ def calc_loudness(data, measurement = 'momentary', params = []):
 
         # Convert to Loudness
         loudness_k = -0.691 + (10 * np.log10(z))
+
+        # Create Corresponding Time Vector
+        loudness_t = create_time_vector(loudness_k, fs_filt, win_size - (win_size*(overlap/100)))
         
         if measurement == 'momentary' or measurement == 'short' or measurement == 'custom':
-            return loudness_k
+            return loudness_k, loudness_t
 
         elif measurement == 'integrated' or measurement == 'lra':
             # Calculate the relative threshold
@@ -294,7 +298,7 @@ def calc_crest_factor(data, win_size, fs=44100):
 
     return: crest factor
     """
-    # Buffer the signal matrix-style (input, block-size, hop-size)
+    # Convert win_size from ms to samples
     win_size_s = np.floor(win_size*(fs/1000))
 
     # Get the RMS level per window
@@ -307,12 +311,17 @@ def calc_crest_factor(data, win_size, fs=44100):
     activity = calc_activity(data, win_size)
 
     # Calculate the Crest Factor per window
-    return np.multiply(np.divide(peaks, rms), activity)
+    crest_factor = np.multiply(np.divide(peaks, rms), activity)
+    
+    # Create Time Vector
+    crest_factor_t = create_time_vector(crest_factor, fs, win_size_s)
+    
+    return crest_factor, crest_factor_t
 
 def calc_activity(data, win_size):
     """
     data: audio array in mono or stereo
-    win_size: size in samples for the block analysis
+    win_size: size in ms for the block analysis
 
     Utilyzing a Hysteresis Noise Gate, a time block is considered to be
     either active or inactive.  Hysteresis thresholds at -25 and -30 LUFS 
@@ -332,7 +341,7 @@ def calc_activity(data, win_size):
 
     # Get our LUFS values
     params = [win_size, 0]
-    LUFS = calc_loudness(data, 'custom', params)
+    LUFS, LUFS_t = calc_loudness(data, 'custom', params)
 
     # Pre-Allocate Active Frames
     active_frames = np.zeros(len(LUFS))
@@ -357,14 +366,103 @@ def calc_activity(data, win_size):
 
 def create_time_vector(data, fs_old, hop_size):
     """
+    Creates a time vector to correspond to a windowed vector
+
+    Parameters
+    ----------
     data: audio array in mono or stereo
-    hop_size: size in samples of the hop
 
+    hop_size: size in samples of the hop amount
 
-    returns: a time vector corresponding to data
+    fs_old: The sample rate of the signal pre-windowing
+
+    Returns
+    -------
+    A time vector corresponding to the windowed data
     """
     # Convert Sampling Rate based on Hop Size
     fs_new = fs_old/hop_size
 
     # Create Time Vector
     return np.linspace(0, (len(data)/fs_new), len(data))
+
+def calc_spectral_centroid(data, win_size=2048):
+    """
+    MIR toolbox says 50ms Window Time for All Spectral Features
+    We're going to use 2048 samples to keep it power of 2 as 50ms at 44100 is 2000.
+    Using 50 percent overlap as in MIR toolbox
+
+    !!! Librosa stft is returning windows with size 1 more than necessary
+
+    """
+    if len(data) == 2:
+        # Calc STFT using Librosa
+        stft_l = librosa.stft(data[0,:], n_fft=2048, center=False)
+        stft_r = librosa.stft(data[1,:], n_fft=2048, center=False)
+    else:
+        # Calc STFT using Librosa
+        stft = librosa.stft(data, n_fft=2048, center=False)
+
+def force_mono(data, mode="geometric_mean"):
+    """
+    Forces a signal to mono...
+    Use this function in the calculation of spectral features?
+
+    Parameters
+    ----------
+    data: audio array
+
+    mode: geometric_mean or sum
+            geometric_mean takes the mean
+            sum is a straight summation
+
+    Returns
+    -------
+    An audio array that has now 1 dimension
+
+    """
+    if len(data) == 1:
+        return data
+    else:
+        if mode == "geometric_mean":
+            return np.mean(data, axis=0)
+        elif mode == "sum":
+            return np.sum(data, axis=0)
+            
+def compute_stft(data, win_size=2048, overlap=50, center=False):
+    """
+    Computes an STFT for a mono formatted signal
+
+    !!! Unsure the exact difference of rfft and fft
+
+    Parameters
+    ----------
+    data: audio array in mono
+
+    win_size: analysis block size in samples
+
+    overlap: amount of overlap in percent
+
+    center: a switch to pad the signal such that time 0 is at the center of the first window
+
+    Returns
+    -------
+    An STFT matrix where each column is an FFT of a window
+
+    """
+    # Buffer the audio up
+    audio_matrix = librosa.util.frame( data, win_size, win_size - (win_size*(overlap/100)) )
+
+    # Create window
+    window = np.hanning(win_size)
+
+    # Window the audio frame by frame
+    window_matrix = np.transpose(np.tile(window, (len(audio_matrix[0,:]), 1)))
+
+    # Window the signal via dot multiplication
+    windowed_audio = np.multiply(audio_matrix, window_matrix)
+
+    pass
+    
+        
+        

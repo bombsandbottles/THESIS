@@ -139,10 +139,14 @@
 	"build_varint": "",
 	"command_palette":
 	{
-		"height": 247.0,
-		"last_filter": "pack ins",
+		"height": 47.0,
+		"last_filter": "python",
 		"selected_items":
 		[
+			[
+				"python",
+				"Set Syntax: Python"
+			],
 			[
 				"pack ins",
 				"Package Control: Install Package"
@@ -213,14 +217,16 @@
 	},
 	"expanded_folders":
 	[
-		"/Users/harrison/Google Drive/NYU/Masters Music Tech/1 - THESIS/THESIS"
+		"/Users/harrison/Google Drive/NYU/Masters Music Tech/1 - THESIS/THESIS",
+		"/Users/harrison/Google Drive/NYU/Masters Music Tech/1 - THESIS/THESIS/Code"
 	],
 	"file_history":
 	[
-		"/Users/harrison/Google Drive/NYU/Masters Music Tech/1 - THESIS/THESIS.sublime-project",
-		"/Users/harrison/Google Drive/NYU/Masters Music Tech/1 - THESIS/THESIS/Code/mir_utils.py",
-		"/Users/harrison/Google Drive/NYU/Masters Music Tech/1 - THESIS/THESIS/Code/feature_extraction.py",
 		"/Users/harrison/Google Drive/NYU/Masters Music Tech/1 - THESIS/THESIS/Code/normalize_data.py",
+		"/Users/harrison/Google Drive/NYU/Masters Music Tech/1 - THESIS/THESIS/Code/feature_extraction.py",
+		"/Users/harrison/Google Drive/NYU/Masters Music Tech/1 - THESIS/THESIS/Code/mir_utils.py",
+		"/Users/harrison/Google Drive/NYU/Masters Music Tech/1 - THESIS/THESIS/Code/normalize_test.py",
+		"/Users/harrison/Google Drive/NYU/Masters Music Tech/1 - THESIS/THESIS.sublime-project",
 		"/Users/harrison/Library/Application Support/Sublime Text 3/Packages/User/Preferences.sublime-settings",
 		"/Users/harrison/Google Drive/NYU/Masters Music Tech/1 - THESIS/clear_icons.mdown",
 		"/Users/harrison/Google Drive/NYU/Masters Music Tech/1 - THESIS/Code/normalize_data.py",
@@ -412,7 +418,7 @@
 	"show_open_files": false,
 	"show_tabs": true,
 	"side_bar_visible": true,
-	"side_bar_width": 150.0,
+	"side_bar_width": 192.0,
 	"status_bar_visible": true,
 	"template_settings":
 	{
