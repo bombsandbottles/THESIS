@@ -388,20 +388,30 @@ def create_time_vector(data, fs_old, hop_size):
 
 def calc_spectral_centroid(data, win_size=2048):
     """
+    Calculates the spectral centroid per stft window
+
     MIR toolbox says 50ms Window Time for All Spectral Features
     We're going to use 2048 samples to keep it power of 2 as 50ms at 44100 is 2000.
     Using 50 percent overlap as in MIR toolbox
 
-    !!! Librosa stft is returning windows with size 1 more than necessary
+    Parameters
+    ----------
+    data: audio array in mono
+
+    win_size: analysis block size in samples
+
+    Returns
+    -------
 
     """
-    if len(data) == 2:
-        # Calc STFT using Librosa
-        stft_l = librosa.stft(data[0,:], n_fft=2048, center=False)
-        stft_r = librosa.stft(data[1,:], n_fft=2048, center=False)
-    else:
-        # Calc STFT using Librosa
-        stft = librosa.stft(data, n_fft=2048, center=False)
+    # Compute an STFT but only keep the magnitudes
+    stft = np.abs(compute_stft(data, win_size))
+
+    sc = []
+
+    for window_num in xrange(stft.shape[0]):
+        
+
 
 def force_mono(data, mode="geometric_mean"):
     """
@@ -440,9 +450,9 @@ def compute_stft(data, win_size=2048, overlap=50, center=False):
     data: audio array in mono
 
     win_size: analysis block size in samples
-
+    
     overlap: amount of overlap in percent
-
+    
     center: a switch to pad the signal such that time 0 is at the center of the first window
 
     Returns
@@ -450,6 +460,11 @@ def compute_stft(data, win_size=2048, overlap=50, center=False):
     An STFT matrix where each column is an FFT of a window
 
     """
+    if len(data) == 2:
+        print "Data needs to be mono!"
+        print "Forcing data to mono..."
+        data = force_mono(data)
+        
     # Buffer the audio up
     audio_matrix = librosa.util.frame( data, win_size, win_size - (win_size*(overlap/100)) )
 
@@ -460,9 +475,37 @@ def compute_stft(data, win_size=2048, overlap=50, center=False):
     window_matrix = np.transpose(np.tile(window, (len(audio_matrix[0,:]), 1)))
 
     # Window the signal via dot multiplication
-    windowed_audio = np.multiply(audio_matrix, window_matrix)
+    windowed_audio = np.transpose(np.multiply(audio_matrix, window_matrix))
 
-    pass
+    # FFT
+    return np.transpose(np.fft.rfft(windowed_audio))
+
+def generate_fft_bins(win_size, fs=44100):
+    """ 
+    Given the fft window size, generate the hz value per bin
     
+    Parameters
+    ----------
+    win_size: window size in samples
+
+    fs: sample rate
+
+    Returns
+    -------
+    A vector containing the hz value per bin (fk)
+
+    """
+    # Generate win_size points from 0hz-fs
+    fk = np.linspace(0, fs, win_size)
+
+    # Remove symmetry and cut to fs/2
+    return fk[0:(len(fk)//2)+1]
+
+def plot_stft(stft):
+    # Lifted from Librosa Documentation to Plot STFT Quick/Easy
+    D = librosa.logamplitude(np.abs(stft)**2, ref_power=np.max)
+    librosa.display.specshow(D, y_axis='linear')
+    plt.colorbar(format='%+2.0f dB')
+    plt.title('Linear-frequency power spectrogram')
         
         
