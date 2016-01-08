@@ -420,6 +420,50 @@ def calc_spectral_centroid(data, win_size=2048):
     # Divide each windows results for the SC
     return np.divide(numerator, denominator)
 
+def calc_spectral_spread(data, win_size=2048):
+    """
+    Calculates the spectral spread per stft window
+
+    MIR toolbox says 50ms Window Time for All Spectral Features
+    We're going to use 2048 samples to keep it power of 2 as 50ms at 44100 is 2000.
+    Using 50 percent overlap as in MIR toolbox
+
+    !!! THIS IS BROKEN AS SHIT RIGHT NOW
+
+    Parameters
+    ----------
+    data: audio array in mono
+
+    win_size: analysis block size in samples
+
+    Returns
+    -------
+    The spectral centroid for each window
+    """
+    # Compute an STFT but only keep the magnitudes (Square the mags?!?!?!)
+    X_matrix = np.square(np.abs(compute_stft(data, win_size)))
+
+    # Generate fk vector and tile it so each column is a window
+    fk = generate_fft_bins(win_size)
+    fk_matrix = np.transpose(np.tile(fk, (X_matrix.shape[1], 1)))
+
+    # Calc sc and convert it into a matrix for easy calculations
+    sc = calc_spectral_centroid(data)
+    sc_matrix = np.tile(sc, (X_matrix.shape[0], 1))
+
+    # Perform (fk-sc(m))^2
+    numerator = np.square(np.subtract(fk_matrix, sc_matrix))
+    # Multiply (fk-sc(m))^2 against X(m,k)
+    numerator = np.multiply(numerator, X_matrix)
+    # Sum the columns for each window
+    numerator = np.sum(numerator, axis=0)
+
+    # Perform sum(X(m,k)) to get denominator
+    denominator = np.sum(X_matrix, axis=0)
+
+    # Divide each windows results for the SS
+    return np.sqrt(np.divide(numerator, denominator))
+
 def force_mono(data, mode="geometric_mean"):
     """
     Forces a signal to mono...

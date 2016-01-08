@@ -9,7 +9,7 @@ def calc_peak(data):
 	"""
 	data: discrete audio arrays
 
-	Quick function to find peak audio level of a stereo multi-track
+	Quick function to find peak audio level of a multi-track
 	
 	returns: the peak_amplitude 
 	"""
