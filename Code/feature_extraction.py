@@ -402,16 +402,23 @@ def calc_spectral_centroid(data, win_size=2048):
 
     Returns
     -------
-
+    The spectral centroid for each window
     """
     # Compute an STFT but only keep the magnitudes
-    stft = np.abs(compute_stft(data, win_size))
+    X_matrix = np.abs(compute_stft(data, win_size))
 
-    sc = []
+    # Create hz vector and tile it for easy matrix multiplication
+    fk = generate_fft_bins(win_size)
+    fk_matrix = np.transpose(np.tile(fk, (X_matrix.shape[1], 1)))
 
-    for window_num in xrange(stft.shape[0]):
-        
+    # Multiply each bin frequency by each magnitude, sum each window
+    numerator = np.sum(np.multiply(fk_matrix, X_matrix), axis=0)
 
+    # Sum the magnitudes for each window
+    denominator = np.sum(X_matrix, axis=0)
+
+    # Divide each windows results for the SC
+    return np.divide(numerator, denominator)
 
 def force_mono(data, mode="geometric_mean"):
     """
