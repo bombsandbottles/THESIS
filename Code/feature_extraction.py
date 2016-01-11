@@ -428,7 +428,7 @@ def calc_spectral_spread(data, win_size=2048):
     We're going to use 2048 samples to keep it power of 2 as 50ms at 44100 is 2000.
     Using 50 percent overlap as in MIR toolbox
 
-    !!! THIS IS BROKEN AS SHIT RIGHT NOW
+    !!! THIS IS BROKEN AS SHIT RIGHT NOW??? !!!
 
     Parameters
     ----------
@@ -464,18 +464,17 @@ def calc_spectral_spread(data, win_size=2048):
     # Divide each windows results for the SS
     return np.sqrt(np.divide(numerator, denominator))
 
-def force_mono(data, mode="geometric_mean"):
+def force_mono(data, mode="arithmetic_mean"):
     """
     Forces a signal to mono...
-    Use this function in the calculation of spectral features?
+
+    !!! Use this function in the calculation of spectral features? !!!
 
     Parameters
     ----------
     data: audio array
 
-    mode: geometric_mean or sum
-            geometric_mean takes the mean
-            sum is a straight summation
+    mode: geometric_mean or sum, arithmetic_mean
 
     Returns
     -------
@@ -485,8 +484,10 @@ def force_mono(data, mode="geometric_mean"):
     if len(data) == 1:
         return data
     else:
-        if mode == "geometric_mean":
+        if mode == "arithmetic_mean":
             return np.mean(data, axis=0)
+        elif mode == "geometric_mean":
+            return scipy.stats.mstats.gmean(data, axis=0)
         elif mode == "sum":
             return np.sum(data, axis=0)
             
@@ -494,7 +495,7 @@ def compute_stft(data, win_size=2048, overlap=50, center=False):
     """
     Computes an STFT for a mono formatted signal
 
-    !!! Unsure the exact difference of rfft and fft
+    !!! Unsure the exact difference of rfft and fft !!!
 
     Parameters
     ----------
