@@ -560,4 +560,6 @@ def plot_stft(stft):
     plt.colorbar(format='%+2.0f dB')
     plt.title('Linear-frequency power spectrogram')
         
-        
+def calc_zcr(data, win_size=2048):
+    
+    pass
