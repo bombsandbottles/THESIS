@@ -422,11 +422,35 @@ def calc_spectral_centroid(data, win_size=2048):
 
 def calc_spectral_spread(data, win_size=2048):
     """
-    Calculates the spectral spread per stft window
+    Takes a more statistical approach for getting the spectral spread
+    src: Gillet, Olivier, Richard. "Automatic transcription of drum loops." 2004
 
-    MIR toolbox says 50ms Window Time for All Spectral Features
-    We're going to use 2048 samples to keep it power of 2 as 50ms at 44100 is 2000.
-    Using 50 percent overlap as in MIR toolbox
+    Parameters
+    ----------
+    data: audio array in mono
+
+    win_size: analysis block size in samples
+
+    Returns
+    -------
+    The spectral spread for each window
+    """
+    # First calculate the spectral centroid, (add a zero for u2)
+    sc = calc_spectral_centroid(data, win_size=2048)
+    sc = np.append(sc, 0)
+
+    # Pre-Allocate spectral spread array
+    ss = np.zeros(len(sc) - 1)
+    for window_num in xrange(len(sc) - 1):
+
+        # Calc spectral spread
+        ss[window_num] = np.sqrt(sc[window_num + 1] - np.power(sc[window_num], 2))
+
+    return ss
+
+def calc_spectral_spread_alt(data, win_size=2048):
+    """
+    Calculates the spectral spread per stft window
 
     !!! THIS IS BROKEN AS SHIT RIGHT NOW??? !!!
 
@@ -438,7 +462,7 @@ def calc_spectral_spread(data, win_size=2048):
 
     Returns
     -------
-    The spectral centroid for each window
+    The spectral spread for each window
     """
     # Compute an STFT but only keep the magnitudes (Square the mags?!?!?!)
     X_matrix = np.square(np.abs(compute_stft(data, win_size)))
