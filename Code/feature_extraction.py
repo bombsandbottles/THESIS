@@ -422,6 +422,110 @@ def calc_spectral_centroid(data, win_size=2048):
 
 def calc_spectral_spread(data, win_size=2048):
     """
+    Another attempt at spectral spread from:
+    Thoman, Chris. Model-Based Classification Of Speech Audio. ProQuest, 2009.
+
+    Parameters
+    ----------
+    data: audio array in mono
+
+    win_size: analysis block size in samples
+
+    Returns
+    -------
+    The spectral spread for each window
+    """
+    # Get M[n]
+    magnitudes = np.abs(compute_stft(data, win_size))
+
+    # Generate fk vector and tile it so each column is a window F[n]
+    fk = generate_fft_bins(win_size)
+    fk_matrix = np.transpose(np.tile(fk, (magnitudes.shape[1], 1)))
+
+    # Calc sc and convert it into a matrix for easy calculations SCt
+    sc = calc_spectral_centroid(data, win_size)
+    sc_matrix = np.tile(sc, (magnitudes.shape[0], 1))
+
+    # Create the numerator and denominators
+    numerator = np.sum(np.multiply(np.power(np.subtract(fk_matrix, sc_matrix), 2), magnitudes), axis=0)
+    denominator = np.sum(magnitudes, axis=0)
+
+    # And return the spectral spread
+    return np.sqrt(np.divide(numerator, denominator))
+
+def calc_spectral_skewness(data, win_size=2048):
+    """
+    Spectral skewness formula from:
+    Thoman, Chris. Model-Based Classification Of Speech Audio. ProQuest, 2009.
+
+    Parameters
+    ----------
+    data: audio array in mono
+
+    win_size: analysis block size in samples
+
+    Returns
+    -------
+    The spectral skewness for each window
+    """
+    # Get M[n]
+    magnitudes = np.abs(compute_stft(data, win_size))
+
+    # Get SCt and turn it into a matrix for easy calculation
+    sc = calc_spectral_centroid(data, win_size)
+    sc_matrix = np.tile(sc, (magnitudes.shape[0], 1))
+
+    # Get F[n] and matricize it
+    fk = generate_fft_bins(win_size)
+    fk_matrix = np.transpose(np.tile(fk, (magnitudes.shape[1], 1)))
+
+    # Get SPt
+    ss = calc_spectral_spread(data, win_size)
+
+    # Create the numerator and denominators
+    numerator = np.sum(np.multiply(np.power(np.subtract(fk_matrix, sc_matrix), 3), magnitudes), axis=0)
+    denominator = np.multiply(np.power(ss, 3), np.sum(magnitudes, axis=0))
+
+    return np.divide(numerator, denominator)
+
+def calc_spectral_kurtosis(data, win_size=2048):
+    """
+    Spectral skewness formula from:
+    Thoman, Chris. Model-Based Classification Of Speech Audio. ProQuest, 2009.
+
+    Parameters
+    ----------
+    data: audio array in mono
+
+    win_size: analysis block size in samples
+
+    Returns
+    -------
+    The spectral skewness for each window
+    """
+    # Get M[n]
+    magnitudes = np.abs(compute_stft(data, win_size))
+
+    # Get SCt and turn it into a matrix for easy calculation
+    sc = calc_spectral_centroid(data, win_size)
+    sc_matrix = np.tile(sc, (magnitudes.shape[0], 1))
+
+    # Get F[n] and matricize it
+    fk = generate_fft_bins(win_size)
+    fk_matrix = np.transpose(np.tile(fk, (magnitudes.shape[1], 1)))
+
+    # Get SPt
+    ss = calc_spectral_spread(data, win_size)
+
+    # Create the numerator and denominators
+    numerator = np.sum(np.multiply(np.power(np.subtract(fk_matrix, sc_matrix), 4), magnitudes), axis=0)
+    denominator = np.multiply(np.power(ss, 4), np.sum(magnitudes, axis=0))
+
+    # Kurtosis incoming
+    return np.subtract(np.divide(numerator, denominator), 3)
+
+def calc_spectral_spread_alt_2(data, win_size=2048):
+    """
     Takes a more statistical approach for getting the spectral spread
     src: Gillet, Olivier, Richard. "Automatic transcription of drum loops." 2004
 
