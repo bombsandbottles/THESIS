@@ -607,7 +607,6 @@ def force_mono(data, mode="arithmetic_mean"):
     Returns
     -------
     An audio array that has now 1 dimension
-
     """
     if len(data) == 1:
         return data
@@ -638,7 +637,6 @@ def compute_stft(data, win_size=2048, overlap=50, center=False):
     Returns
     -------
     An STFT matrix where each column is an FFT of a window
-
     """
     if len(data) == 2:
         print "Data needs to be mono!"
@@ -673,7 +671,6 @@ def generate_fft_bins(win_size, fs=44100):
     Returns
     -------
     A vector containing the hz value per bin (fk)
-
     """
     # Generate win_size points from 0hz-fs
     fk = np.linspace(0, fs, win_size)
@@ -688,6 +685,60 @@ def plot_stft(stft):
     plt.colorbar(format='%+2.0f dB')
     plt.title('Linear-frequency power spectrogram')
         
-def calc_zcr(data, win_size=2048):
+def calc_zcr(data, win_size=2048, overlap=0, fs=44100):
+    """ 
+    Calculates the zero-crossing rate of a signal:
+    Thoman, Chris. Model-Based Classification Of Speech Audio. ProQuest, 2009.
+
+    !!! Going to code this with a force to mono built in until I verify stereo process !!!
     
-    pass
+    Parameters
+    ----------
+    data: audio data in array form
+
+    win_size: window size in samples
+
+    overlap: Amount of overlap between windows in percent amount (0=no overlap)
+
+    fs: sample rate
+
+    Returns
+    -------
+    The zero-crossing-rate per window zcr
+    """
+    # Buffer data
+    data = force_mono(data)
+    data_matrix = librosa.util.frame(data, win_size, win_size-(win_size*(overlap/100)))
+
+    # Pre-Allocate Output
+    zcr = np.zeros(data_matrix.shape[1])
+
+    for window_num in xrange(data_matrix.shape[1]):
+        window = data_matrix[:,window_num]
+        window_sum = 0
+        for n in xrange(1, len(window)):
+            window_sum += np.abs(sign(window[n])-sign(window[n-1]))
+        zcr[window_num] = (fs/len(window)) * window_sum
+
+    return zcr
+
+def sign(n):
+    """
+    A helper function used in calc_zcr to determine sign(x[n]):
+    Thoman, Chris. Model-Based Classification Of Speech Audio. ProQuest, 2009.
+
+    sign(x[n]) >= 0 : 1
+    sign(x[n])  < 0 : 0
+
+    Parameters
+    ----------
+    n : an audio sample in the time domain
+
+    Returns
+    -------
+    A 1 or a 0 depending on the conditions above.
+    """
+    if n >= 0:
+        return 1
+    elif n < 0:
+        return 0
