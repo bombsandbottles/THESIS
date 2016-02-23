@@ -57,7 +57,7 @@ def k_filter(data, fs):
     # Filter in succession
     return lfilter(b2, a2, lfilter(b1, a1, data)), fs
 
-def calc_loudness(data, measurement = 'momentary', params = []):
+def calc_loudness(data, measurement = 'momentary', params = [], fs=44100):
     """
     data: audio in array form via librosa
     measurement = Momentary, Short-Term, Integrated or Loudness-Range (LRA).  
@@ -691,6 +691,7 @@ def calc_zcr(data, win_size=2048, overlap=0, fs=44100):
     Thoman, Chris. Model-Based Classification Of Speech Audio. ProQuest, 2009.
 
     !!! Going to code this with a force to mono built in until I verify stereo process !!!
+    !!! Runs really slowly !!!
     
     Parameters
     ----------
@@ -717,7 +718,7 @@ def calc_zcr(data, win_size=2048, overlap=0, fs=44100):
         window = data_matrix[:,window_num]
         window_sum = 0
         for n in xrange(1, len(window)):
-            window_sum += np.abs(sign(window[n])-sign(window[n-1]))
+            window_sum += abs(sign(window[n])-sign(window[n-1]))
         zcr[window_num] = (fs/len(window)) * window_sum
 
     return zcr
@@ -742,3 +743,26 @@ def sign(n):
         return 1
     elif n < 0:
         return 0
+
+def spectral_rolloff(data, win_size=2048, rolloff=95):
+    """ 
+    Compute spectral_rolloff:
+    Thoman, Chris. Model-Based Classification Of Speech Audio. ProQuest, 2009.
+    
+    Parameters
+    ----------
+    data: audio data in array form
+
+    win_size: win size in samples
+
+    rolloff = The rolloff percentage
+
+    Returns
+    -------
+    A vector containing the spectral rolloff hz value per window
+    """
+    rolloff = rolloff/100
+    magnitudes = np.abs(compute_stft(data, win_size))
+
+    unknown = np.multiply(rolloff, np.sum(magnitudes, axis=0))
+    

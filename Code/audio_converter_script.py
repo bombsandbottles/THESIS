@@ -5,4 +5,4 @@ converter = imp.load_source('batch_convert_data', '/Users/harrison/Google Drive/
 
 print "Filepath"
 
-converter.batch_convert(filepath)
+converter.batch_convert('/Users/harrison/Desktop/Thesis_Test/Kesha - Cmon')

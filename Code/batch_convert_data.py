@@ -43,8 +43,8 @@ def batch_convert(filepath, out_format='.wav', bit_depth=16, fs=44100):
 			infile = filepath + "/" + track
 			outfile = converted_path + "/" + file_name + "_converted" + out_format
 			if out_format == '.mp3':
-				sox_command = ['sox', infile, '-C', '320', outfile, '-S']
+				sox_command = ['sox', '-G', infile, '-C', '320', outfile, '-S']
 			else:
-				sox_command = ['sox', infile, '-b', str(bit_depth), '-r', str(fs), outfile, '-S']
+				sox_command = ['sox', '-G', infile, '-b', str(bit_depth), '-r', str(fs), outfile, '-S']
 			print("Converting %s with SOX...") % track
 			subprocess.call(sox_command)
