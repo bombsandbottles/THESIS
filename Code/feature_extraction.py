@@ -744,10 +744,12 @@ def sign(n):
     elif n < 0:
         return 0
 
-def spectral_rolloff(data, win_size=2048, rolloff=95):
+def spectral_rolloff(data, win_size=2048, rolloff=0.85):
     """ 
     Compute spectral_rolloff:
     Thoman, Chris. Model-Based Classification Of Speech Audio. ProQuest, 2009.
+
+    !!! This function feels very ugly, would like to make it more streamlined !!!
     
     Parameters
     ----------
@@ -761,8 +763,28 @@ def spectral_rolloff(data, win_size=2048, rolloff=95):
     -------
     A vector containing the spectral rolloff hz value per window
     """
-    rolloff = rolloff/100
     magnitudes = np.abs(compute_stft(data, win_size))
+    freqs = generate_fft_bins(win_size)
 
-    unknown = np.multiply(rolloff, np.sum(magnitudes, axis=0))
+    # This is Sum(X) * R
+    thresholds = np.multiply(rolloff, np.sum(magnitudes, axis=0))
+
+    # Traverse each window in STFT, sum the magnitudes cumativley until thresholds is hit
+    indexes = np.zeros(magnitudes.shape[1])
+    for i in xrange(0, magnitudes.shape[1]):            
+        mag_cumsum = 0
+        for j in xrange(0, len(magnitudes[:,i])):
+            mag_cumsum += magnitudes[j,i]
+            if mag_cumsum >= thresholds[i]:
+                indexes[i] = j
+                break
+
+    spectral_rolloff = np.zeros(len(indexes))
+    for i in xrange(0, len(indexes)):
+        spectral_rolloff[i] = freqs[indexes[i]]
+
+    return spectral_rolloff
+
+
+
     
