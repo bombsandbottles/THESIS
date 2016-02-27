@@ -870,5 +870,15 @@ def spectral_flux(data, win_size=2048):
     -------
     A vector containing the spectral flux per window
     """
-    
+    # STFT
+    magnitudes = np.abs(compute_stft(data, win_size))
+
+    # Create Mt-1 by adding a window of Zeros in front and back
+    magnitudes = np.insert(magnitudes, 0, np.zeros((magnitudes.shape[0])), axis=1)
+
+    # Subtract across time (Mt[n] - Mt-1[n])
+    # (Mt[n] - Mt-1[n])^2
+    # Sum from n->N
+    # Take the sqrt and divide by N
+    return np.divide(np.sqrt(np.sum(np.square(np.diff(magnitudes, axis=1)), axis=0)), magnitudes.shape[0])
     
