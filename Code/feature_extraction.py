@@ -785,6 +785,90 @@ def spectral_rolloff(data, win_size=2048, rolloff=0.85):
 
     return spectral_rolloff
 
+def spectral_crest_factor(data, win_size=2048):
+    """ 
+    Computes the spectral crest factor
 
+    Thoman, Chris. Model-Based Classification Of Speech Audio. ProQuest, 2009.
 
+    A measure to distinguish between noise/tone like signals.
+    Values near 1 indicate a noise like signal.
+    Values greater than 1 indicate a more tone like signal.
+    
+    Parameters
+    ----------
+    data: audio data in array form
+
+    win_size: win size in samples
+
+    Returns
+    -------
+    A vector containing the spectral crest factor per window
+    """
+    # STFT
+    magnitudes = np.abs(compute_stft(data, win_size))
+    
+    # Mean magnitude per window 
+    mean_magnitudes = np.mean(magnitudes, axis=0)
+    
+    # Max magnitude per window
+    max_magnitudes = np.amax(magnitudes, axis=0)
+
+    # Perform spectral crest factor calculation
+    return np.divide(max_magnitudes, mean_magnitudes)
+
+def spectral_flatness(data, win_size=2048):
+    """ 
+    Computes the spectral flatness per window
+
+    Thoman, Chris. Model-Based Classification Of Speech Audio. ProQuest, 2009.
+
+    A measure to distinguish between noise/tone like signals.
+    Values near 1 indicate a noise like signal.
+    Values closer to 0 indicate a more tone like signal.
+    
+    Parameters
+    ----------
+    data: audio data in array form
+
+    win_size: win size in samples
+
+    Returns
+    -------
+    A vector containing the spectral flatness per window
+    """
+    # STFT
+    magnitudes = np.abs(compute_stft(data, win_size))
+
+    # Mean magnitude per window 
+    mean_magnitudes = np.mean(magnitudes, axis=0)
+
+    # Geometric mean per window
+    geometric_mean_magnitudes = scipy.stats.mstats.gmean(magnitudes, axis=0)
+
+    # Get the spectral flatness
+    return np.divide(geometric_mean_magnitudes, mean_magnitudes)
+
+def spectral_flux(data, win_size=2048):
+    """
+    Computes the spectral flux per window
+
+    (Juan Bello)
+    Thoman, Chris. Model-Based Classification Of Speech Audio. ProQuest, 2009.
+
+    Measures the spectral difference between successive windows
+
+    !!! Not really sure this has any use in measuring the mixdown !!!
+
+    Parameters
+    ----------
+    data: audio data in array form
+
+    win_size: win size in samples
+
+    Returns
+    -------
+    A vector containing the spectral flux per window
+    """
+    
     
