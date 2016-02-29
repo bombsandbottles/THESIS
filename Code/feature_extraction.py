@@ -71,7 +71,9 @@ def calc_loudness(data, measurement = 'momentary', params = [], fs=44100):
     instead of 4dB
     !!
 
-    return: LUKS/LUFS
+    return: Loudness Vector and Time Vector is measurement = 'momentary', 'short' or 'custom'
+    else:
+    return: LRA or Integrated Loudness Value
     """
     # Threshold constant
     abs_thresh = -70
@@ -286,17 +288,21 @@ def get_peaks_cf(data, win_size):
 
 def calc_crest_factor(data, win_size, fs=44100):
     """
-    data: audio as numpy array to be analyzed
-    fs: sample rate of the data
-    win_size: value in ms to create the blocks for analysis
-    
     Given a window size for analysis (1s and 100ms typically for this research), 
     find the crest factor value of that windows as an indicator for dynamic range
 
     !!! calc_activity gets passed win_size in time still and not samples, this can 
     be done more elegantly !!!
 
-    return: crest factor
+    Parameters
+    ----------
+    data: audio as numpy array to be analyzed
+    fs: sample rate of the data
+    win_size: value in ms to create the blocks for analysis
+
+    Returns
+    -------
+    crest factor vector, and corresponding time vector
     """
     # Convert win_size from ms to samples
     win_size_s = np.floor(win_size*(fs/1000))
@@ -744,7 +750,7 @@ def sign(n):
     elif n < 0:
         return 0
 
-def spectral_rolloff(data, win_size=2048, rolloff=0.85):
+def calc_spectral_rolloff(data, win_size=2048, rolloff=0.85):
     """ 
     Compute spectral_rolloff:
     Thoman, Chris. Model-Based Classification Of Speech Audio. ProQuest, 2009.
@@ -785,7 +791,7 @@ def spectral_rolloff(data, win_size=2048, rolloff=0.85):
 
     return spectral_rolloff
 
-def spectral_crest_factor(data, win_size=2048):
+def calc_spectral_crest_factor(data, win_size=2048):
     """ 
     Computes the spectral crest factor
 
@@ -817,7 +823,7 @@ def spectral_crest_factor(data, win_size=2048):
     # Perform spectral crest factor calculation
     return np.divide(max_magnitudes, mean_magnitudes)
 
-def spectral_flatness(data, win_size=2048):
+def calc_spectral_flatness(data, win_size=2048):
     """ 
     Computes the spectral flatness per window
 
@@ -849,7 +855,7 @@ def spectral_flatness(data, win_size=2048):
     # Get the spectral flatness
     return np.divide(geometric_mean_magnitudes, mean_magnitudes)
 
-def spectral_flux(data, win_size=2048):
+def calc_spectral_flux(data, win_size=2048):
     """
     Computes the spectral flux per window
 
@@ -876,9 +882,6 @@ def spectral_flux(data, win_size=2048):
     # Create Mt-1 by adding a window of Zeros in front and back
     magnitudes = np.insert(magnitudes, 0, np.zeros((magnitudes.shape[0])), axis=1)
 
-    # Subtract across time (Mt[n] - Mt-1[n])
-    # (Mt[n] - Mt-1[n])^2
-    # Sum from n->N
-    # Take the sqrt and divide by N
+    # Subtract across time (Mt[n] - Mt-1[n]), (Mt[n] - Mt-1[n])^2, Sum from n->N, Take the sqrt and divide by N
     return np.divide(np.sqrt(np.sum(np.square(np.diff(magnitudes, axis=1)), axis=0)), magnitudes.shape[0])
     
