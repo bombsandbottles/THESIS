@@ -48,3 +48,5 @@ def batch_convert(filepath, out_format='.wav', bit_depth=16, fs=44100):
 				sox_command = ['sox', '-G', infile, '-b', str(bit_depth), '-r', str(fs), outfile, '-S']
 			print("Converting %s with SOX...") % track
 			subprocess.call(sox_command)
+
+	return converted_path
