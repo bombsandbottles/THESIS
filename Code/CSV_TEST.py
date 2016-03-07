@@ -7,7 +7,7 @@ import shutil
 import mir_utils
 import os, sys
 
-filepath = '/Users/harrison/Desktop/Thesis_Test/Ariana Grande - One Last Time/converted_tracks_16_44100/normalized_tracks'
+filepath = '/Users/harrison/Desktop/Thesis_Test/Ariana Grande - One Last Time/Test'
 
 for stem in os.listdir(filepath):
 	file_name, file_extension = os.path.splitext(stem)
@@ -52,6 +52,7 @@ for stem in os.listdir(filepath):
 		spectral_flux = feature_extraction.calc_spectral_flux(data, win_size=2048)
 		print "done!"
 		
+		# Prep Data for CSV output
 		data = [ 
 		['loudness_momentary', loudness_momentary],
 		['loudness_short', loudness_short],
@@ -69,6 +70,10 @@ for stem in os.listdir(filepath):
 		['spectral_flatness', spectral_flatness],
 		['spectral_flux', spectral_flux]
 		]
+		
+		# data = [[row[0]]+list(row[1:]) for row in data]
+		# data = [[row[0]]+row[1].tolist() for row in data]
+		# Python Magic Time
 		data = [[row[0]]+row[1].tolist() if type(row[1]) is np.ndarray else row for row in data]
 
 		# Write to CSV File
