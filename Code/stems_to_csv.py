@@ -7,14 +7,28 @@ import shutil
 import mir_utils
 import os, sys
 
-filepath = '/Users/harrison/Desktop/Thesis_Test/Ariana Grande - One Last Time/Test'
+def create_folder_above(filepath, folder_name='CSV'):
+	"""
+	Creates folder ABOVE filepath to store CSV data
+	from feature extraction
+	"""
+	os.chdir(filepath)
+	os.chdir('..')
+	if os.path.exists(os.path.join(os.getcwd(), folder_name)):
+		shutil.rmtree(os.path.join(os.getcwd(), folder_name))
+	os.makedirs(os.path.join(os.getcwd(), folder_name))
+	os.chdir(os.path.join(os.getcwd(), folder_name))
+	return os.getcwd()
+
+filepath = '/Users/harrison/Desktop/Thesis_Test/Kesha - Cmon copy/Stems'
+csv_path = create_folder_above(filepath)
 
 for stem in os.listdir(filepath):
 	file_name, file_extension = os.path.splitext(stem)
 	if file_extension == '.wav':
 		# Get discretized audio to run through features
 		print "Importing %s for analysis" % file_name
-		data, fs, t = feature_extraction.import_audio(filepath + "/" + stem)
+		data, fs, t = feature_extraction.import_audio(os.path.join(filepath, stem))
 
 		# Calculate Dynamics Features
 		print "Calculating dynamics features for %s" % file_name
@@ -52,7 +66,6 @@ for stem in os.listdir(filepath):
 		spectral_flux = feature_extraction.calc_spectral_flux(data, win_size=2048)
 		print "done!"
 		
-		# Prep Data for CSV output
 		data = [ 
 		['loudness_momentary', loudness_momentary],
 		['loudness_short', loudness_short],
@@ -70,14 +83,10 @@ for stem in os.listdir(filepath):
 		['spectral_flatness', spectral_flatness],
 		['spectral_flux', spectral_flux]
 		]
-		
-		# data = [[row[0]]+list(row[1:]) for row in data]
-		# data = [[row[0]]+row[1].tolist() for row in data]
-		# Python Magic Time
 		data = [[row[0]]+row[1].tolist() if type(row[1]) is np.ndarray else row for row in data]
 
 		# Write to CSV File
-		with open(filepath + "/" + file_name + ".csv", "wb") as stem_data:
+		with open(os.path.join(csv_path, file_name + ".csv"), "wb") as stem_data:
 			w = csv.writer(stem_data, delimiter=',')
 			print "Writing %s to csv" % file_name
 			w.writerows(data)
